@@ -14,7 +14,7 @@ jobs:
       - python/save-cache
       - run:
           command: |
-            python -m pytest
+            python -m pytest -v --junitxml=test-results/pytest/pytest-report.xml --cov-report=xml
             bash <(curl -s https://codecov.io/bash) 
           name: Test
 
