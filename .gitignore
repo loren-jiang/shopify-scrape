@@ -125,4 +125,6 @@ venv.bak/
 dmypy.json
 
 # cov
-test-results/
+.coverage
+/htmlcov
+coverage.xml
