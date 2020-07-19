@@ -13,7 +13,9 @@ jobs:
       - python/install-deps
       - python/save-cache
       - run:
-          command: python -m pytest
+          command: |
+            python -m pytest
+            bash <(curl -s https://codecov.io/bash) 
           name: Test
 
 workflows:
