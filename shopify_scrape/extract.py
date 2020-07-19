@@ -2,7 +2,7 @@ import os
 import requests
 import json
 from urllib.parse import urlparse, ParseResult
-from utils import format_url
+from shopify_scrape.utils import format_url
 import gzip  # gzip compresse file sizes by about factor of 10
 
 

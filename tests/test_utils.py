@@ -3,7 +3,7 @@ import shutil
 import pytest
 import json
 from contextlib import contextmanager
-from utils import format_url, InvalidURL
+from shopify_scrape.utils import format_url, InvalidURL
 from urllib.parse import ParseResult
 
 

@@ -1,4 +1,4 @@
-from extract import get_products
+from shopify_scrape.extract import get_products
 
 
 def test_get_products():
