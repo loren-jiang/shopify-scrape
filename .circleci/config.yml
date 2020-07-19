@@ -3,7 +3,6 @@ version: 2.1
 
 orbs:
   python: circleci/python@0.2.1
-
 jobs:
   build-and-test:
     executor: python/default
@@ -22,7 +21,7 @@ jobs:
           path: test-results
           destination: tr1
       - run:
-          command: bash <(curl -s https://codecov.io/bash)
+          command: bash <(curl -s https://codecov.io/bash) -v
 
 workflows:
   main:
