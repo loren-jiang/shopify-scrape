@@ -1,3 +1,3 @@
 [run]
 source = .
-omit = ./venv/*,*tests*,*settings*,*apps.py,*manage.py,*__init__.py,*migrations*,*asgi*,*wsgi*,*admin.py,*urls.py, *sitemaps.py, *conftest.py
+omit = ./venv/*,*tests*, *conftest.py

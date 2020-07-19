@@ -22,8 +22,7 @@ jobs:
           path: test-results
           destination: tr1
       - run:
-          command: |
-            bash <(curl -s https://codecov.io/bash)
+          command: bash <(curl -s https://codecov.io/bash)
 
 workflows:
   main:
