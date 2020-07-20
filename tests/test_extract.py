@@ -8,8 +8,8 @@ def test_get_products():
 
 
 def test_get_products_with_page_range():
-    data = get_products('https://bombas.com', page_range=(1, 3))
-    assert 'products' in data and len(data['products']) == 30*3
+    data = get_products('https://bombas.com', page_range=(1, 2))
+    assert 'products' in data and len(data['products']) == 60
 
 @pytest.mark.parametrize("test_url, page_range, expectation",
                          [

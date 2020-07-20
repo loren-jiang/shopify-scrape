@@ -126,5 +126,14 @@ dmypy.json
 
 # cov
 .coverage
-/htmlcov
+htmlcov/
 coverage.xml
+
+# logs
+logs/
+
+# output
+output/
+output_jsons/
+out/
+

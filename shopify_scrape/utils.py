@@ -1,12 +1,14 @@
 from urllib.parse import urlparse, ParseResult
 import csv
+import json
 import re
 import urllib
+import os
+import argparse
 
-
-class InvalidURL(Exception):
-    pass
-
+URL_RETURN_TYPES = ("parse_result", "url")
+URL_SCHEMES = ('https', 'http')
+OUTPUT_TYPES = ('json', 'csv')
 
 # Check https://regex101.com/r/A326u1/5 for reference
 DOMAIN_FORMAT = re.compile(
@@ -20,10 +22,15 @@ DOMAIN_FORMAT = re.compile(
     r"(:\d{1,5})?",  # port [optional]
     re.IGNORECASE
 )
+
 SCHEME_FORMAT = re.compile(
     r"^(http|hxxp|ftp|fxp)s?$",  # scheme: http(s) or ftp(s)
     re.IGNORECASE
 )
+
+
+class InvalidURL(Exception):
+    pass
 
 
 # def parse_csv(file_path):
@@ -79,8 +86,6 @@ def is_valid_url(url):
         raise InvalidURL("URL domain malformed (domain={})".format(domain))
     return bool(url)
 
-URL_RETURN_TYPES = ("parse_result", "url")
-URL_SCHEMES = ('https', 'http')
 
 def format_url(my_url, scheme='https', return_type="url"):
     """Takes input string to valid URL format
@@ -108,3 +113,39 @@ def format_url(my_url, scheme='https', return_type="url"):
         return p
     return url
 
+
+def save_to_file(fp, data, output_type='json'):
+    if output_type not in OUTPUT_TYPES:
+        raise Exception(f"'output_type' arg must be in one of {OUTPUT_TYPES}")
+    with open(fp, 'w+') as f:
+        if output_type == 'json':
+            json.dump(data, f)
+        elif output_type == 'csv':
+            #TODO: write this case
+            pass
+
+def is_file_empty(file_path):
+    """ Check if file is empty by confirming if its size is 0 bytes"""
+    # Check if file exist and it is empty
+    return os.path.exists(file_path) and os.stat(file_path).st_size == 0
+
+def copy_namespace(ns, attrs=None):
+    """Returns shallow copy of Namespace ns. If attrs is specified, then copies those attrs if they exist.
+
+    Args:
+        ns ([type]): [description]
+        attrs ([type], optional): [description]. Defaults to None.
+
+    Returns:
+        [type]: [description]
+    """
+    ns_dict = vars(ns)
+    if attrs is None:
+        return argparse.Namespace(**ns_dict)
+
+    ret_dict = {}
+    for attr in attrs:
+        ret_dict[attr] = ns_dict.get(attr)
+
+    return argparse.Namespace(**ret_dict)
+    

@@ -13,10 +13,10 @@ def does_not_raise():
 
 
 @pytest.fixture(scope='module')
-def products_dir(tmpdir_factory):
-    my_tmpdir = tmpdir_factory.mktemp("products_temp")
-    yield my_tmpdir
-    shutil.rmtree(str(my_tmpdir))
+def products_dir(tmp_path_factory):
+    path = tmp_path_factory.mktemp("products_temp")
+    yield path
+    shutil.rmtree(path.getbasetemp())
 
 
 @pytest.mark.parametrize("test_input, scheme, return_type, expected",
@@ -51,3 +51,11 @@ def test_format_url_parsed_result():
 def test_format_url_exceptions(test_input, scheme, return_type, expectation):
     with expectation:
         assert format_url(test_input, scheme, return_type) is not None
+
+
+def test_save_to_file(tmp_path_factory):
+    data = {'1': '1'}
+    fp = os.path.join(tmp_path_factory.getbasetemp(), 'test_file.json')
+    with open(fp, 'w+') as f:
+        json.dump(data, f)
+    assert os.path.exists(fp)
