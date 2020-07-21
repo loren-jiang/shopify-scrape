@@ -1,4 +1,6 @@
 import pytest
+import os
+
 from shopify_scrape.extract import get_products, get_collections, main
 
 def test_main(tmp_path_factory):

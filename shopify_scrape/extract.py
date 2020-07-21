@@ -7,6 +7,7 @@ import argparse
 from tqdm import tqdm
 import io
 import csv
+from urllib.parse import urlparse
 from shopify_scrape.utils import format_url, save_to_file, range_arg
 from shopify_scrape.utils import copy_namespace, is_file_empty
 # import gzip  # gzip compresse file sizes by about factor of 10
@@ -35,8 +36,11 @@ def extract(endpoint, agg_key, page_range=None):
 
         while True:
             page_endpoint = endpoint + f'?page={str(page)}'
-            response = requests.get(page_endpoint, timeout=5)
+            response = requests.get(page_endpoint, timeout=10)
             response.raise_for_status()
+            if response.url != page_endpoint:  # to handle potential redirects            
+                p_endpoint = urlparse(response.url)  # parsed URL
+                endpoint = p_endpoint.scheme + '://' + p_endpoint.netloc + p_endpoint.path
             if not response.headers['Content-Type'] == 'application/json; charset=utf-8':
                 raise Exception('Incorrect response content type')
             data = response.json()
