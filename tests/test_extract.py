@@ -1,11 +1,13 @@
 import pytest
-from shopify_scrape.extract import get_products, get_collections
+from shopify_scrape.extract import get_products, get_collections, main
+
+def test_main(tmp_path_factory):
+    fp = os.path.join(tmp_path_factory.getbasetemp(), 'test_file.json')
 
 
 def test_get_products():
     data = get_products('https://bombas.com')
     assert 'products' in data and len(data['products']) > 0
-
 
 def test_get_products_with_page_range():
     data = get_products('https://bombas.com', page_range=(1, 2))

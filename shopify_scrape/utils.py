@@ -149,3 +149,19 @@ def copy_namespace(ns, attrs=None):
 
     return argparse.Namespace(**ret_dict)
     
+def range_arg():
+    class RangeAction(argparse.Action):
+        def __call__(self, parser, args, values, option_string=None):
+            if not len(values) == 2:
+                msg = "row_range requires 2 integers"
+                raise argparse.ArgumentTypeError(msg)
+            try:
+                values = list(map(lambda x: int(x), values))
+            except ValueError:
+                msg = "row_range arguments must be integers"
+                raise argparse.ArgumentTypeError(msg)
+            if (not values[0] > 0 and values[1] > 0) or values[0] > values[1]:
+                msg = "row_range arguments must be positive integers and form a proper range (second arg is greater or equal than first arg)"
+                raise argparse.ArgumentTypeError(msg)
+            setattr(args, self.dest, values)
+    return RangeAction
