@@ -36,9 +36,10 @@ def extract(endpoint, agg_key, page_range=None):
 
         while True:
             page_endpoint = endpoint + f'?page={str(page)}'
-            response = requests.get(page_endpoint, timeout=10)
+            response = requests.get(page_endpoint, timeout=(
+                int(os.environ.get('REQUEST_TIMEOUT', 0)) or 10))
             response.raise_for_status()
-            if response.url != page_endpoint:  # to handle potential redirects            
+            if response.url != page_endpoint:  # to handle potential redirects
                 p_endpoint = urlparse(response.url)  # parsed URL
                 endpoint = p_endpoint.scheme + '://' + p_endpoint.netloc + p_endpoint.path
             if not response.headers['Content-Type'] == 'application/json; charset=utf-8':
