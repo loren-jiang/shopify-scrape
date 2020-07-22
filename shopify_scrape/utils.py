@@ -113,10 +113,13 @@ def format_url(my_url, scheme='https', return_type="url"):
         return p
     return url
 
-
 def save_to_file(fp, data, output_type='json'):
+    print(fp)
     if output_type not in OUTPUT_TYPES:
         raise Exception(f"'output_type' arg must be in one of {OUTPUT_TYPES}")
+    dir_name = os.path.dirname(fp)
+    if dir_name:
+        os.makedirs(dir_name, exist_ok=True)
     with open(fp, 'w+') as f:
         if output_type == 'json':
             json.dump(data, f)
