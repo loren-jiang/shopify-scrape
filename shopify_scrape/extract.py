@@ -164,35 +164,53 @@ def parse_args(argv=sys.argv[1:]):
     parent_parser = argparse.ArgumentParser(add_help=False)
 
     parent_parser.add_argument('-d', '--dest_path', type=str,
-                               help="Destination folder. Defaults to current directory ('./')", default='./')
-
+                               help="""Destination folder for extracted files. 
+                               Defaults to current directory './'""",
+                               default='./')
     parent_parser.add_argument('-o', '--output_type', type=str,
-                               help="Output file type ('json' or 'csv'). Defaults to 'json'",
+                               help="""Output file type ('json' or 'csv'). 
+                               Defaults to 'json'""",
                                default='json')
-    parent_parser.add_argument('-p', '--page_range', action=range_arg(), nargs='+',
-                               help="Page range as tuple to extract. There are 30 items per page.")
+    parent_parser.add_argument('-p', '--page_range',
+                               action=range_arg(), nargs='+',
+                               help="""Page range as tuple to extract. 
+                               There are 30 items per page. If not provided, 
+                               all pages with products will be taken.""")
     parent_parser.add_argument('-c', '--collections', action='store_true',
-                               help="If true, extracts '/collections.json' instead.")
+                               help="""If true, extracts '/collections.json' 
+                               instead of '/products.json'""")
 
     parser = argparse.ArgumentParser(add_help=False)
     subparsers = parser.add_subparsers(dest="subparser_name")
 
-    # for url command
+    # for url subcommand
     url_parser = subparsers.add_parser('url', parents=[parent_parser])
-    url_parser.add_argument('url', type=str, help="URL to extract.")
+    url_parser.add_argument('url', type=str,
+                            help="""URL to extract. An attempt will be made to 
+                            fix inproperly formatted URLs.""")
     url_parser.add_argument('-f', '--file_path', type=str,
-                            help="File path to write. Defaults to '[dest_path]/[url].products' or '[dest_path]/[url].collections'")
+                            help="""File path to write. Defaults to 
+                            '[dest_path]/[url].products' or 
+                            '[dest_path]/[url].collections'""")
 
-    # for batch command
+    # for batch subcommand
     batch_parser = subparsers.add_parser('batch', parents=[parent_parser])
     batch_parser.add_argument('urls_file_path', type=str,
-                              help="File path of csv containing URLs to extract.")
+                              help="""File path of csv file containing 
+                              URLs to extract.""")
     batch_parser.add_argument('url_column', type=str,
-                              help="Name of unique column with URLs.")
+                              help="""Name of unique column with URLs.""")
     batch_parser.add_argument('-r', '--row_range', action=range_arg(),
-                              nargs='+', help="Row range specified as two integers.")
-    batch_parser.add_argument('-l', '--log', nargs='?', type=str, const=f"logs/{str(round(datetime.now().timestamp()))}_log.csv",
-                              help="File path of log file. If none, the log file is named logs/[unix_time_in_seconds]_log.csv")
+                              nargs='+',
+                              help="""Row range specified as two integers.
+                              Should be positive, with second argument greater or equal
+                              than first.""")
+    batch_parser.add_argument('-l', '--log',
+                              nargs='?', type=str,
+                              const=f"logs/{str(round(datetime.now().timestamp()))}_log.csv",
+                              help="""File path of log file. If none, the log file 
+                              is named logs/[unix_time_in_seconds]_log.csv.
+                              'logs' folder created if it does not exist.""")
 
     return parser.parse_args(args=argv)
 
