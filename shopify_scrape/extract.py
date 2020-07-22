@@ -10,7 +10,7 @@ from tqdm import tqdm
 from datetime import datetime
 from urllib.parse import urlparse
 from shopify_scrape.utils import format_url, save_to_file, range_arg
-from shopify_scrape.utils import copy_namespace, is_file_empty
+from shopify_scrape.utils import copy_namespace, is_file_empty, dummy_context_mgr
 
 
 def extract(endpoint, agg_key, page_range=None):
@@ -43,101 +43,104 @@ def extract(endpoint, agg_key, page_range=None):
 
 
 def extract_url(args):
-    if args:
+    p = format_url(args.url, scheme='https', return_type='parse_result')
 
-        p = format_url(args.url, scheme='https', return_type='parse_result')
+    formatted_url = p.geturl()
+    agg_key = 'products'
+    if args.collections:
+        agg_key = 'collections'
+    fp = os.path.join(
+        args.dest_path, f'{p.netloc}.{agg_key}.{args.output_type}')
 
-        formatted_url = p.geturl()
-        agg_key = 'products'
-        if args.collections:
-            agg_key = 'collections'
+    if args.file_path:
         fp = os.path.join(
-            args.dest_path, f'{p.netloc}.{agg_key}.{args.output_type}')
+            args.dest_path, f'{args.file_path}.{args.output_type}')
 
-        if args.file_path:
-            fp = os.path.join(
-                args.dest_path, f'{args.file_path}.{args.output_type}')
+    endpoint = f'{formatted_url}/{agg_key}.json'
+    ret = {
+        'endpoint_attempted': endpoint,
+        'collected_at': str(datetime.now()),
+        'success': False,
+        'error': ''
+    }
+    try:
+        data = extract(endpoint, agg_key, args.page_range)
 
-        endpoint = f'{formatted_url}/{agg_key}.json'
-        ret = {
-            'endpoint_attempted': endpoint,
-            'collected_at': str(datetime.now()),
-            'success': False,
-            'error': ''
-        }
-        try:
-            data = extract(endpoint, agg_key, args.page_range)
+    except requests.exceptions.HTTPError as err:
+        ret['error'] = str(err)
+    except json.decoder.JSONDecodeError as err:
+        ret['error'] = str(err)
+    except Exception as err:
+        ret['error'] = str(err)
+    else:
+        ret['success'] = True
+        ret[agg_key] = data
 
-        except requests.exceptions.HTTPError as err:
-            ret['error'] = err
-        except json.decoder.JSONDecodeError as err:
-            ret['error'] = err
-        except Exception as err:
-            ret['error'] = err
-        else:
-            ret['success'] = True
-            ret[agg_key] = data
-
-        if ret['success']:
-            save_to_file(fp, data, args.output_type)
-        return ret
+    if ret['success']:
+        ret['file_path'] = str(fp)
+        save_to_file(fp, data, args.output_type)
+    return ret
 
 
 def extract_batch(args):
-    if args:
-        if not os.path.exists(args.urls_file_path):
-            raise Exception(f"{args.urls_file_path} does not exist.")
-        if not args.urls_file_path.endswith('.csv'):
-            raise Exception(f"Must be .csv file.")
-        if is_file_empty(args.urls_file_path):
-            raise Exception(f"{args.urls_file_path} seems to be empty.")
+    if not os.path.exists(args.urls_file_path):
+        raise Exception(f"{args.urls_file_path} does not exist.")
+    if not args.urls_file_path.endswith('.csv'):
+        raise Exception(f"Must be .csv file.")
+    if is_file_empty(args.urls_file_path):
+        raise Exception(f"{args.urls_file_path} seems to be empty.")
 
-        if not os.path.exists(args.dest_path):
-            os.mkdir(args.dest_path)
+    if not os.path.exists(args.dest_path):
+        os.mkdir(args.dest_path)
 
-        if args.log:
-            if not os.path.exists('logs'):
-                os.mkdir('logs')
-            now = datetime.now()
-            seconds_since_epoch = round(datetime.now().timestamp())
-            log_filename = f"logs/{str(seconds_since_epoch)}_log.csv"
-            logging.basicConfig(filename=log_filename, level=logging.INFO)
-            logger = logging.getLogger(__name__)
-            logging.root.handlers[0].setFormatter(CsvFormatter())
-            logger.info(f'Batch extraction started at {str(now)}')
-            logger.info('url', 'collected_at', 'output_file', 'error')
+    if args.log:
+        log_dir = os.path.dirname(args.log)
+        if log_dir:
+            os.makedirs(log_dir, exist_ok=True)
+        # logging.basicConfig(filename=args.log, level=logging.INFO)
+        # logger = logging.getLogger(__name__)
+        # logging.root.handlers[0].setFormatter(CsvFormatter())
+        # logger.info(f'Batch extraction started at {str(datetime.now())}')
+        # logger.info('url', 'collected_at', 'output_file', 'error')
 
-        with open(args.urls_file_path, 'r+') as csv_file:
-            reader = csv.reader(csv_file)
-            rows = list(reader)
-            N = len(rows)
-            first_row = rows[0]
-            url_column_idx = first_row.index(args.url_column)
+    with open(args.urls_file_path, 'r') as csv_file:
+        reader = csv.reader(csv_file)
+        rows = list(reader)
 
-            if url_column_idx == -1:
-                raise Exception(
-                    f"{args.url_column} is not in the csv file's first row.")
+    N = len(rows)
+    first_row = rows[0]
+    url_column_idx = first_row.index(args.url_column)
 
-            r_range = range(1, N)
-            if args.row_range:
-                r_range = range(args.row_range[0], args.row_range[1]+1)
+    if url_column_idx == -1:
+        raise Exception(
+            f"{args.url_column} is not in the csv file's first row.")
 
-            r_range_list = list(r_range)
+    r_range = range(1, N)
+    if args.row_range:
+        r_range = range(args.row_range[0], args.row_range[1]+1)
 
-            if r_range_list[-1] > N:
-                raise Exception(
-                    f"Given row_range {r_range} is not within the number of rows in csv file.")
+    r_range_list = list(r_range)
 
-            for i in tqdm(r_range_list):
-                row = rows[i]
-                url = row[url_column_idx]
-                extract_args = copy_namespace(
-                    args, ['collections', 'output_type', 'page_range', 'dest_path', 'file_path'])
-                extract_args.url = url
-                data = extract_url(**vars(extract_args))
-                if args.log:
-                    logger.info(url, data.get('endpoint_attempted', ''), data.get(
-                        'collected_at', ''), data.get('error', ''))
+    if r_range_list[-1] > N:
+        raise Exception(
+            f"Given row_range {r_range} is not within the number of rows in csv file.")
+
+    with open(args.log, 'w', newline='') if args.log else dummy_context_mgr() as log_file:
+        writer = csv.writer(log_file, delimiter=',')if log_file else None
+        for i in tqdm(r_range_list):
+            row = rows[i]
+            url = row[url_column_idx]
+            extract_args = copy_namespace(
+                args, ['collections', 'output_type', 'page_range', 'dest_path', 'file_path'])
+            extract_args.url = url
+            data = extract_url(extract_args)
+            if writer:
+                data_row = [url, data.get('endpoint_attempted', ''), data.get(
+                    'collected_at', ''), data.get('error', ''), data.get('file_path', '')]
+                writer.writerow(data_row)
+
+                # logger.info(url, data.get('endpoint_attempted', ''), data.get(
+                #     'collected_at', ''), data.get('error', ''))
 
 
 class CsvFormatter(logging.Formatter):
@@ -188,8 +191,8 @@ def parse_args(argv=sys.argv[1:]):
                               help="Name of unique column with URLs.")
     batch_parser.add_argument('-r', '--row_range', action=range_arg(),
                               nargs='+', help="Row range specified as two integers.")
-    batch_parser.add_argument('-l', '--log', action='store_true',
-                              help="If true, logs the success of each URL attempt.")
+    batch_parser.add_argument('-l', '--log', nargs='?', type=str, const=f"logs/{str(round(datetime.now().timestamp()))}_log.csv",
+                              help="File path of log file. If none, the log file is named logs/[unix_time_in_seconds]_log.csv")
 
     return parser.parse_args(args=argv)
 

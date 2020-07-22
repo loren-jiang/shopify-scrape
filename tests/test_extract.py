@@ -3,7 +3,7 @@ import os
 import requests
 import argparse
 
-from shopify_scrape.extract import extract, extract_url, parse_args
+from shopify_scrape.extract import extract, extract_url, parse_args, extract_batch
 
 
 def test_parse_args():
@@ -58,17 +58,6 @@ def test_extract_products_with_page_range():
     assert len(products) == 60
 
 
-@pytest.mark.parametrize("test_url, agg_key, page_range, expectation",
-                         [
-                             ('https://bombas.com/products.json', 'products', (-1, 3),
-                              pytest.raises(Exception)),
-                             ('https://bombas.com/products.json', 'products', (3, 1),
-                              pytest.raises(Exception))
-                         ]
-                         )
-def test_extract_products_page_range_exceptions(test_url, agg_key, page_range, expectation):
-    with expectation:
-        assert extract(test_url, agg_key, page_range) is not None
 
 
 @pytest.mark.parametrize("args",
@@ -86,5 +75,11 @@ def test_extract_collections():
     collections = extract('https://bombas.com/collections.json', 'collections')
     assert len(collections) > 0
 
-def test_extract_batch():
-    pass
+
+def test_extract_batch(products_dir):
+    args_str = f'batch examples/urls.csv urls -l logs/pytest_log.csv -d {products_dir} -p 1 1'
+    args = parse_args(args_str.split())
+    extract_batch(args)
+    assert os.path.exists('logs/pytest_log.csv')
+
+    

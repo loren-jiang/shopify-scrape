@@ -5,6 +5,7 @@ import re
 import urllib
 import os
 import argparse
+import contextlib
 
 URL_RETURN_TYPES = ("parse_result", "url")
 URL_SCHEMES = ('https', 'http')
@@ -168,3 +169,9 @@ def range_arg():
                 raise argparse.ArgumentTypeError(msg)
             setattr(args, self.dest, values)
     return RangeAction
+
+
+
+@contextlib.contextmanager
+def dummy_context_mgr():
+    yield None
