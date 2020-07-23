@@ -22,6 +22,8 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+bump.sh
+.pypirc
 build/
 develop-eggs/
 dist/
