@@ -9,7 +9,7 @@ import contextlib
 
 URL_RETURN_TYPES = ("parse_result", "url")
 URL_SCHEMES = ('https', 'http')
-OUTPUT_TYPES = ('json', 'csv')
+OUTPUT_TYPES = ('json', )
 
 # Check https://regex101.com/r/A326u1/5 for reference
 DOMAIN_FORMAT = re.compile(
@@ -114,24 +114,26 @@ def format_url(my_url, scheme='https', return_type="url"):
         return p
     return url
 
-def save_to_file(fp, data, output_type='json'):
-    print(fp)
-    if output_type not in OUTPUT_TYPES:
-        raise Exception(f"'output_type' arg must be in one of {OUTPUT_TYPES}")
+
+def json_to_file(fp: str, data: dict):
+    """Saves json data as Python dict in specified file path.
+
+    Args:
+        fp (str): File path as string.
+        data (dict): Data to save.
+    """
     dir_name = os.path.dirname(fp)
     if dir_name:
         os.makedirs(dir_name, exist_ok=True)
     with open(fp, 'w+') as f:
-        if output_type == 'json':
-            json.dump(data, f)
-        elif output_type == 'csv':
-            #TODO: write this case
-            pass
+        json.dump(data, f)
+
 
 def is_file_empty(file_path):
     """ Check if file is empty by confirming if its size is 0 bytes"""
     # Check if file exist and it is empty
     return os.path.exists(file_path) and os.stat(file_path).st_size == 0
+
 
 def copy_namespace(ns, attrs=None):
     """Returns shallow copy of Namespace ns. If attrs is specified, then copies those attrs if they exist.
@@ -152,7 +154,8 @@ def copy_namespace(ns, attrs=None):
         ret_dict[attr] = ns_dict.get(attr)
 
     return argparse.Namespace(**ret_dict)
-    
+
+
 def range_arg():
     class RangeAction(argparse.Action):
         def __call__(self, parser, args, values, option_string=None):
@@ -169,7 +172,6 @@ def range_arg():
                 raise argparse.ArgumentTypeError(msg)
             setattr(args, self.dest, values)
     return RangeAction
-
 
 
 @contextlib.contextmanager

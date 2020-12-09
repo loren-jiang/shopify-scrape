@@ -1,5 +1,4 @@
 import os
-import shutil
 import pytest
 import json
 from contextlib import contextmanager
@@ -10,6 +9,7 @@ from urllib.parse import ParseResult
 @contextmanager
 def does_not_raise():
     yield
+
 
 @pytest.mark.parametrize("test_input, scheme, return_type, expected",
                          [

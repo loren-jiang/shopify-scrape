@@ -9,7 +9,7 @@ import csv
 from tqdm import tqdm
 from datetime import datetime
 from urllib.parse import urlparse
-from shopify_scrape.utils import format_url, save_to_file, range_arg
+from shopify_scrape.utils import format_url, json_to_file, range_arg
 from shopify_scrape.utils import copy_namespace, is_file_empty, dummy_context_mgr
 
 
@@ -50,11 +50,11 @@ def extract_url(args):
     if args.collections:
         agg_key = 'collections'
     fp = os.path.join(
-        args.dest_path, f'{p.netloc}.{agg_key}.{args.output_type}')
+        args.dest_path, f'{p.netloc}.{agg_key}.json')
 
     if args.file_path:
         fp = os.path.join(
-            args.dest_path, f'{args.file_path}.{args.output_type}')
+            args.dest_path, f'{args.file_path}.json')
 
     endpoint = f'{formatted_url}/{agg_key}.json'
     ret = {
@@ -78,7 +78,7 @@ def extract_url(args):
 
     if ret['success']:
         ret['file_path'] = str(fp)
-        save_to_file(fp, data, args.output_type)
+        json_to_file(fp, data)
     return ret
 
 
@@ -131,7 +131,7 @@ def extract_batch(args):
             row = rows[i]
             url = row[url_column_idx]
             extract_args = copy_namespace(
-                args, ['collections', 'output_type', 'page_range', 'dest_path', 'file_path'])
+                args, ['collections', 'page_range', 'dest_path', 'file_path'])
             extract_args.url = url
             data = extract_url(extract_args)
             if writer:
@@ -160,17 +160,13 @@ class CsvFormatter(logging.Formatter):
 
 def parse_args(argv=sys.argv[1:]):
     # shared args
-    # dest_path, output_type, page_range, collections
+    # dest_path, page_range, collections
     parent_parser = argparse.ArgumentParser(add_help=False)
 
     parent_parser.add_argument('-d', '--dest_path', type=str,
                                help="""Destination folder for extracted files. 
                                Defaults to current directory './'""",
                                default='./')
-    parent_parser.add_argument('-o', '--output_type', type=str,
-                               help="""Output file type ('json' or 'csv'). 
-                               Defaults to 'json'""",
-                               default='json')
     parent_parser.add_argument('-p', '--page_range',
                                action=range_arg(), nargs='+',
                                help="""Page range as tuple to extract. 
