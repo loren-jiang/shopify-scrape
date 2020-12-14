@@ -1,7 +1,10 @@
 [run]
 source = .
-omit = ./venv/*,*tests*, *conftest.py
+omit = ./venv/*,*tests*, *conftest.py, setup.py
 
 [report]
 exclude_lines =
     if __name__ == .__main__.:
+
+[html]
+directory = htmlcov

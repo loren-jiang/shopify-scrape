@@ -1,11 +1,11 @@
 from urllib.parse import urlparse, ParseResult
-import csv
 import json
 import re
 import urllib
 import os
 import argparse
 import contextlib
+from typing import Union, Optional, List
 
 URL_RETURN_TYPES = ("parse_result", "url")
 URL_SCHEMES = ('https', 'http')
@@ -53,24 +53,25 @@ class InvalidURL(Exception):
 #     return rows
 
 
-def is_valid_url(url):
+def is_valid_url(url) -> bool:
     """Returns if URL is valid (minimally has scheme and netloc)
     Taken from https://stackoverflow.com/questions/7160737/python-how-to-validate-a-url-in-python-malformed-or-not/32171869
 
     Args:
-        url (String): Input URL
+        url (string): Input URL
 
     Returns:
-        Boolean: Whether URL is valid
+        bool: Whether URL is valid
     """
     url = url.strip()
 
-    if not url:
-        raise InvalidURL("No URL specified")
+    # if not url:
+    #     raise InvalidURL("No URL specified")
 
-    if len(url) > 2048:
-        raise InvalidURL(
-            "URL exceeds its maximum length of 2048 characters (given length={})".format(len(url)))
+    # if len(url) > 2048:
+    #     raise InvalidURL(
+    #         f"URL exceeds its maximum length of 2048 characters (given length={len(url)})"
+    #     )
 
     result = urllib.parse.urlparse(url)
     scheme = result.scheme
@@ -80,11 +81,11 @@ def is_valid_url(url):
         raise InvalidURL("No URL scheme specified")
     if not re.fullmatch(SCHEME_FORMAT, scheme):
         raise InvalidURL(
-            "URL scheme must either be http(s) or ftp(s) (given scheme={})".format(scheme))
+            f"URL scheme must either be http(s) or ftp(s) (given scheme={scheme})")
     if not domain:
         raise InvalidURL("No URL domain specified")
     if not re.fullmatch(DOMAIN_FORMAT, domain):
-        raise InvalidURL("URL domain malformed (domain={})".format(domain))
+        raise InvalidURL(f"URL domain malformed (domain={domain})")
     return bool(url)
 
 
@@ -92,15 +93,16 @@ def format_url(my_url, scheme='https', return_type="url"):
     """Takes input string to valid URL format
 
     Args:
-        my_url (String): URL-like string
+        my_url (string): URL-like string
 
     Returns:
-        String: Properly formatted URL
+        string: Properly formatted URL
     """
     if scheme not in URL_SCHEMES:
-        raise Exception(f"'scheme' arg must be in one of {URL_SCHEMES}")
+        raise ValueError(f"'scheme' arg must be in one of {URL_SCHEMES}")
     if return_type not in URL_RETURN_TYPES:
-        raise Exception(f"'return_type' arg must be one of {URL_RETURN_TYPES}")
+        raise ValueError(
+            f"'return_type' arg must be one of {URL_RETURN_TYPES}")
 
     p = urlparse(my_url, scheme=scheme)
     netloc = p.netloc or p.path
@@ -129,21 +131,31 @@ def json_to_file(fp: str, data: dict):
         json.dump(data, f)
 
 
-def is_file_empty(file_path):
-    """ Check if file is empty by confirming if its size is 0 bytes"""
-    # Check if file exist and it is empty
+def is_file_empty(file_path: str) -> bool:
+    """Check if file is empty by confirming if its size is 0 bytes
+
+    Args:
+        file_path (str): File path.
+
+    Returns:
+        bool: Is empty.
+    """
     return os.path.exists(file_path) and os.stat(file_path).st_size == 0
 
 
-def copy_namespace(ns, attrs=None):
-    """Returns shallow copy of Namespace ns. If attrs is specified, then copies those attrs if they exist.
+def copy_namespace(ns: argparse.Namespace,
+                   attrs: Optional[List[str]] = None) -> argparse.Namespace:
+    """Copies and returns new Namespace from given Namespace.
+    If attrs is specified, then copies only those attrs if they exist.
+
 
     Args:
-        ns ([type]): [description]
-        attrs ([type], optional): [description]. Defaults to None.
+        ns (argparse.Namespace): Namespace input.
+        attrs (Optional[list[str]], optional): List of attribute as strings. 
+        Defaults to None.
 
     Returns:
-        [type]: [description]
+        argparse.Namespace: New Namespace object.
     """
     ns_dict = vars(ns)
     if attrs is None:
@@ -156,22 +168,53 @@ def copy_namespace(ns, attrs=None):
     return argparse.Namespace(**ret_dict)
 
 
-def range_arg():
-    class RangeAction(argparse.Action):
-        def __call__(self, parser, args, values, option_string=None):
-            if not len(values) == 2:
-                msg = "row_range requires 2 integers"
-                raise argparse.ArgumentTypeError(msg)
-            try:
-                values = list(map(lambda x: int(x), values))
-            except ValueError:
-                msg = "row_range arguments must be integers"
-                raise argparse.ArgumentTypeError(msg)
-            if (not values[0] > 0 and values[1] > 0) or values[0] > values[1]:
-                msg = "row_range arguments must be positive integers and form a proper range (second arg is greater or equal than first arg)"
-                raise argparse.ArgumentTypeError(msg)
-            setattr(args, self.dest, values)
-    return RangeAction
+def class_as_fxn(cls):
+    return cls
+
+# Argparse validation
+
+
+class RangeAction(argparse.Action):
+    def __call__(self, parser, args, values, option_string=None):
+        error_msg = ''
+        if not len(values) == 2:
+            error_msg += "row_range requires 2 integers \n"
+            raise argparse.ArgumentTypeError(error_msg)
+        try:
+            values = list(map(lambda x: int(x), values))
+        except ValueError:
+            error_msg += "row_range arguments must be integers \n"
+            raise argparse.ArgumentTypeError(error_msg)
+        if (not values[0] > 0 and values[1] > 0) or values[0] > values[1]:
+            error_msg += "row_range arguments must be positive integers and form a proper range (second arg is greater or equal than first arg) \n"
+        if error_msg:
+            raise ValueError(error_msg)
+        setattr(args, self.dest, values)
+
+
+class FilePathAction(argparse.Action):
+    def __call__(self, parser, args, value, option_string=None):
+        error_msg = ''
+        if re.search(r'[^A-Za-z0-9_\-\.]', value):
+            error_msg += "file_path must be simple and contain only Lower/Upper Alpha, Numeric Digits, Hyphen, or Underscore"
+
+        if error_msg:
+            raise ValueError(error_msg)
+        setattr(args, self.dest, value)
+
+
+class ValidCsvFile(argparse.Action):
+    def __call__(self, parser, args, value: str, option_string=None):
+        if not value.endswith('.csv'):
+            raise ValueError(
+                f'Given arg for {self.dest} of {value}  must end with .csv')
+        if not os.path.exists(value):
+            raise ValueError(
+                f"Given arg for {self.dest} of {value} does not exist.")
+        if is_file_empty(value):
+            raise ValueError(
+                f"Given arg for {self.dest} of {value} seems to be empty.")
+        setattr(args, self.dest, value)
 
 
 @contextlib.contextmanager

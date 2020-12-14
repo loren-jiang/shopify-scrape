@@ -1,16 +1,18 @@
 # shopify-scrape
 
-
 [![CircleCI](https://circleci.com/gh/loren-jiang/misoboop.svg?style=svg)](https://circleci.com/gh/loren-jiang/shopify-scrape)
 [![codecov](https://codecov.io/gh/loren-jiang/shopify-scrape/branch/master/graph/badge.svg)](https://codecov.io/gh/loren-jiang/shopify-scrape)
 
-## Installation 
+## Installation
+
 `pip install shopify_scrape`
 
 ## Usage
+Extracts json data for given URL.
 `python -m shopify_scrape.extract url -h`
+
 ```
-usage: extract.py url [-h] [-d DEST_PATH] [-o OUTPUT_TYPE]
+usage: extract.py url [-h] [-d DEST_PATH]
                       [-p PAGE_RANGE [PAGE_RANGE ...]] [-c] [-f FILE_PATH]
                       url
 
@@ -22,8 +24,6 @@ optional arguments:
   -d DEST_PATH, --dest_path DEST_PATH
                         Destination folder. Defaults to current directory
                         ('./')
-  -o OUTPUT_TYPE, --output_type OUTPUT_TYPE
-                        Output file type ('json' or 'csv'). Defaults to 'json'
   -p PAGE_RANGE [PAGE_RANGE ...], --page_range PAGE_RANGE [PAGE_RANGE ...]
                         Page range as tuple to extract. There are 30 items per
                         page.
@@ -34,9 +34,11 @@ optional arguments:
                         '[dest_path]/[url].collections'
 ```
 
+Extracts json data for URLs given in a specified column of a csv file.
 `python -m shopify_scrape.extract batch -h`
+
 ```
-usage: extract.py batch [-h] [-d DEST_PATH] [-o OUTPUT_TYPE]
+usage: extract.py batch [-h] [-d DEST_PATH]
                         [-p PAGE_RANGE [PAGE_RANGE ...]] [-c]
                         [-r ROW_RANGE [ROW_RANGE ...]] [-l]
                         urls_file_path url_column
@@ -50,8 +52,6 @@ optional arguments:
   -d DEST_PATH, --dest_path DEST_PATH
                         Destination folder. Defaults to current directory
                         ('./')
-  -o OUTPUT_TYPE, --output_type OUTPUT_TYPE
-                        Output file type ('json' or 'csv'). Defaults to 'json'
   -p PAGE_RANGE [PAGE_RANGE ...], --page_range PAGE_RANGE [PAGE_RANGE ...]
                         Page range as tuple to extract. There are 30 items per
                         page.
