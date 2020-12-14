@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="shopify-scrape",
-    version="0.0.4",
+    version="0.0.5",
     author="Loren Jiang",
     author_email="loren.jiang@gmail.com",
     description="Python module to scrape Shopify store URLs",
@@ -21,5 +21,5 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.6',
+    python_requires='>=3.7',
 )

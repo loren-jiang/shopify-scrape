@@ -186,7 +186,7 @@ def parse_args(argv=sys.argv[1:]):
                                default='./')
     parent_parser.add_argument('-p', '--page_range',
                                action=RangeAction, nargs='+',
-                               help="""Page range as tuple to extract. 
+                               help="""Inclusive page range as tuple to extract. 
                                There are 30 items per page. If not provided, 
                                all pages with products will be taken.""")
     parent_parser.add_argument('-c', '--collections', action='store_true',
@@ -217,7 +217,7 @@ def parse_args(argv=sys.argv[1:]):
                               help="""Name of unique column with URLs.""")
     batch_parser.add_argument('-r', '--row_range', action=RangeAction,
                               nargs='+',
-                              help="""Row range specified as two integers.
+                              help="""Inclusive row range specified as two integers.
                               Should be positive, with second argument greater or equal
                               than first.""")
     batch_parser.add_argument('-l', '--log',
